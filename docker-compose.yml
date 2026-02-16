@@ -3,16 +3,15 @@ services:
     image: postgres:16-alpine
     container_name: tipafriend-postgres
     environment:
-      POSTGRES_DB: tipafriend_db
-      POSTGRES_USER: tipafriend
-      POSTGRES_PASSWORD: tipafriend
+      POSTGRES_DB: ${DB_NAME:-tipafriend_db}
+      POSTGRES_USER: ${DB_USER:-tipafriend}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-tipafriend}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tipafriend -d tipafriend_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-tipafriend} -d ${DB_NAME:-tipafriend_db}"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -11,6 +11,23 @@ Friends-only task marketplace backend built with Spring Boot.
 - Docker Desktop
 - Maven (or use included `./mvnw`)
 
+### 0. Environment Setup (First Time Only)
+
+Copy the environment template and configure your credentials:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your values (these will NOT be committed):
+```env
+DB_NAME=tipafriend_db
+DB_USER=tipafriend
+DB_PASSWORD=your_secure_password
+```
+
+> 📖 **Security Note**: Credentials are managed via environment variables. See `SECURITY.md` for details.
+
 ### 1. Start PostgreSQL
 
 ```bash
