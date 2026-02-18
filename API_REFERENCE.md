@@ -89,6 +89,28 @@ Returns the authenticated user (same as `/api/auth/me`).
 ### GET /api/users/{id}
 Returns user profile by id.
 
+### GET /api/users/search?q={query}
+Search users by username or display name (case-insensitive).
+
+**Example**
+```
+GET /api/users/search?q=karim
+```
+
+**Response**
+```json
+[
+  {
+    "id": 1,
+    "email": "user@example.com",
+    "username": "karim",
+    "displayName": "Karim Khalil",
+    "photoUrl": null,
+    "bio": null
+  }
+]
+```
+
 ---
 
 ## Friends
@@ -159,6 +181,15 @@ Friends-only feed (OPEN posts).
 
 Example:
 `/api/posts/feed?type=REQUEST&category=MOVING&page=0&size=20`
+
+### GET /api/posts/my-posts
+Returns posts created by the authenticated user.
+
+### GET /api/posts/user/{userId}
+Returns posts created by the specified user (friends-only unless same user).
+
+### GET /api/posts/accepted
+Returns posts accepted by the authenticated user.
 
 ---
 

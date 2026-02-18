@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -43,5 +45,21 @@ public class UserController {
                 user.getPhotoUrl(),
                 user.getBio()
         ));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<UserResponse>> search(@RequestParam String q) {
+        List<UserResponse> result = userService.searchUsers(q)
+                .stream()
+                .map(user -> new UserResponse(
+                        user.getId(),
+                        user.getEmail(),
+                        user.getUsername(),
+                        user.getDisplayName(),
+                        user.getPhotoUrl(),
+                        user.getBio()
+                ))
+                .toList();
+        return ResponseEntity.ok(result);
     }
 }

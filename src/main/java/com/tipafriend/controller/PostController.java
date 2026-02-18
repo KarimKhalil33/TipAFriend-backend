@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
@@ -77,6 +79,37 @@ public class PostController {
         Long userId = currentUserId(authentication);
         Page<PostResponse> result = postService.getFriendsFeed(userId, type, category, pageable)
                 .map(this::toResponse);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/my-posts")
+    public ResponseEntity<List<PostResponse>> myPosts(Authentication authentication) {
+        Long userId = currentUserId(authentication);
+        List<PostResponse> result = postService.getMyPosts(userId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<PostResponse>> userPosts(@PathVariable Long userId,
+                                                        Authentication authentication) {
+        Long requesterId = currentUserId(authentication);
+        List<PostResponse> result = postService.getUserPosts(requesterId, userId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/accepted")
+    public ResponseEntity<List<PostResponse>> acceptedPosts(Authentication authentication) {
+        Long userId = currentUserId(authentication);
+        List<PostResponse> result = postService.getAcceptedPosts(userId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
         return ResponseEntity.ok(result);
     }
 

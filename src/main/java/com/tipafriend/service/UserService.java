@@ -5,6 +5,7 @@ import com.tipafriend.model.User;
 import com.tipafriend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -31,5 +32,12 @@ public class UserService {
 
     public User save(User user) {
         return userRepository.save(user);
+    }
+
+    public List<User> searchUsers(String query) {
+        if (query == null || query.isBlank()) {
+            return List.of();
+        }
+        return userRepository.findByUsernameContainingIgnoreCaseOrDisplayNameContainingIgnoreCase(query, query);
     }
 }

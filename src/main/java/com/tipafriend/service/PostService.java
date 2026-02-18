@@ -2,13 +2,16 @@ package com.tipafriend.service;
 
 import com.tipafriend.exception.BadRequestException;
 import com.tipafriend.exception.ResourceNotFoundException;
+import com.tipafriend.exception.UnauthorizedException;
 import com.tipafriend.model.Post;
+import com.tipafriend.model.TaskAssignment;
 import com.tipafriend.model.User;
 import com.tipafriend.model.enums.PostCategory;
 import com.tipafriend.model.enums.PostStatus;
 import com.tipafriend.model.enums.PostType;
 import com.tipafriend.repository.PostRepository;
 import com.tipafriend.repository.UserRepository;
+import com.tipafriend.repository.TaskAssignmentRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,13 +25,16 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final FriendshipService friendshipService;
+    private final TaskAssignmentRepository taskAssignmentRepository;
 
     public PostService(PostRepository postRepository,
                        UserRepository userRepository,
-                       FriendshipService friendshipService) {
+                       FriendshipService friendshipService,
+                       TaskAssignmentRepository taskAssignmentRepository) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.friendshipService = friendshipService;
+        this.taskAssignmentRepository = taskAssignmentRepository;
     }
 
     @Transactional
@@ -83,5 +89,22 @@ public class PostService {
 
         return postRepository.save(post);
     }
-}
 
+    public List<Post> getMyPosts(Long userId) {
+        return postRepository.findByAuthorIdOrderByCreatedAtDesc(userId);
+    }
+
+    public List<Post> getUserPosts(Long requesterId, Long targetUserId) {
+        if (!requesterId.equals(targetUserId) && !friendshipService.areFriends(requesterId, targetUserId)) {
+            throw new UnauthorizedException("Only friends can view posts");
+        }
+        return postRepository.findByAuthorIdOrderByCreatedAtDesc(targetUserId);
+    }
+
+    public List<Post> getAcceptedPosts(Long accepterId) {
+        return taskAssignmentRepository.findByAccepterId(accepterId)
+                .stream()
+                .map(TaskAssignment::getPost)
+                .toList();
+    }
+}
