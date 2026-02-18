@@ -1,32 +1,47 @@
 package com.tipafriend.controller;
 
-}
-    }
-        ));
-                user.getBio()
-                user.getPhotoUrl(),
-                user.getDisplayName(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getId(),
-        return ResponseEntity.ok(new UserResponse(
-        User user = userService.getById(id);
-    public ResponseEntity<UserResponse> getUser(@PathVariable Long id) {
-    @GetMapping("/{id}")
+import com.tipafriend.dto.response.UserResponse;
+import com.tipafriend.model.User;
+import com.tipafriend.security.SecurityUser;
+import com.tipafriend.service.UserService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
-    }
-        this.userService = userService;
-    public UserController(UserService userService) {
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
 
     private final UserService userService;
 
-public class UserController {
-@RequestMapping("/api/users")
-@RestController
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
 
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
-import com.tipafriend.service.UserService;
-import com.tipafriend.model.User;
-import com.tipafriend.dto.response.UserResponse;
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> me(Authentication authentication) {
+        SecurityUser principal = (SecurityUser) authentication.getPrincipal();
+        User user = userService.getById(principal.getId());
+        return ResponseEntity.ok(new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getUsername(),
+                user.getDisplayName(),
+                user.getPhotoUrl(),
+                user.getBio()
+        ));
+    }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getUser(@PathVariable Long id) {
+        User user = userService.getById(id);
+        return ResponseEntity.ok(new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getUsername(),
+                user.getDisplayName(),
+                user.getPhotoUrl(),
+                user.getBio()
+        ));
+    }
+}

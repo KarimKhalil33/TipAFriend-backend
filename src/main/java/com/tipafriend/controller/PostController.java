@@ -6,10 +6,13 @@ import com.tipafriend.dto.response.PostResponse;
 import com.tipafriend.model.Post;
 import com.tipafriend.model.enums.PostCategory;
 import com.tipafriend.model.enums.PostType;
+import com.tipafriend.security.SecurityUser;
 import com.tipafriend.service.PostService;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,7 +26,9 @@ public class PostController {
     }
 
     @PostMapping
-    public ResponseEntity<PostResponse> createPost(@RequestParam Long authorId, @RequestBody CreatePostRequest request) {
+    public ResponseEntity<PostResponse> createPost(Authentication authentication,
+                                                   @Valid @RequestBody CreatePostRequest request) {
+        Long authorId = currentUserId(authentication);
         Post post = new Post();
         post.setType(request.type());
         post.setTitle(request.title());
@@ -47,7 +52,8 @@ public class PostController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PostResponse> updatePost(@PathVariable Long id, @RequestBody UpdatePostRequest request) {
+    public ResponseEntity<PostResponse> updatePost(@PathVariable Long id,
+                                                   @Valid @RequestBody UpdatePostRequest request) {
         Post updated = new Post();
         updated.setTitle(request.title());
         updated.setDescription(request.description());
@@ -64,13 +70,19 @@ public class PostController {
     }
 
     @GetMapping("/feed")
-    public ResponseEntity<Page<PostResponse>> getFeed(@RequestParam Long userId,
+    public ResponseEntity<Page<PostResponse>> getFeed(Authentication authentication,
                                                       @RequestParam(required = false) PostType type,
                                                       @RequestParam(required = false) PostCategory category,
                                                       Pageable pageable) {
+        Long userId = currentUserId(authentication);
         Page<PostResponse> result = postService.getFriendsFeed(userId, type, category, pageable)
                 .map(this::toResponse);
         return ResponseEntity.ok(result);
+    }
+
+    private Long currentUserId(Authentication authentication) {
+        SecurityUser principal = (SecurityUser) authentication.getPrincipal();
+        return principal.getId();
     }
 
     private PostResponse toResponse(Post post) {
@@ -94,4 +106,3 @@ public class PostController {
         );
     }
 }
-

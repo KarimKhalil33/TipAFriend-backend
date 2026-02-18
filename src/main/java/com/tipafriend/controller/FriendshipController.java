@@ -1,7 +1,9 @@
 package com.tipafriend.controller;
 
+import com.tipafriend.security.SecurityUser;
 import com.tipafriend.service.FriendshipService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,14 +19,20 @@ public class FriendshipController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Long>> listFriends(@RequestParam Long userId) {
+    public ResponseEntity<List<Long>> listFriends(Authentication authentication) {
+        Long userId = currentUserId(authentication);
         return ResponseEntity.ok(friendshipService.getFriendIds(userId));
     }
 
     @DeleteMapping("/{friendId}")
-    public ResponseEntity<Void> removeFriend(@PathVariable Long friendId, @RequestParam Long userId) {
+    public ResponseEntity<Void> removeFriend(@PathVariable Long friendId, Authentication authentication) {
+        Long userId = currentUserId(authentication);
         friendshipService.removeFriend(userId, friendId);
         return ResponseEntity.noContent().build();
     }
-}
 
+    private Long currentUserId(Authentication authentication) {
+        SecurityUser principal = (SecurityUser) authentication.getPrincipal();
+        return principal.getId();
+    }
+}

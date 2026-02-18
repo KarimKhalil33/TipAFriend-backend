@@ -1,10 +1,13 @@
 package com.tipafriend.dto.request;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 public record CreateReviewRequest(
-        Long taskAssignmentId,
-        Long reviewerId,
-        Integer rating,
-        String comment
+        @NotNull Long taskAssignmentId,
+        @NotNull @Min(1) @Max(5) Integer rating,
+        @Size(max = 2000) String comment
 ) {
 }
-

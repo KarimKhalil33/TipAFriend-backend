@@ -1,8 +1,8 @@
 package com.tipafriend.dto.request;
 
+import jakarta.validation.constraints.NotNull;
+
 public record SendFriendRequestRequest(
-        Long fromUserId,
-        Long toUserId
+        @NotNull Long toUserId
 ) {
 }
-

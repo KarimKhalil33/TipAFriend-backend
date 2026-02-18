@@ -3,8 +3,11 @@ package com.tipafriend.controller;
 import com.tipafriend.dto.request.CreateReviewRequest;
 import com.tipafriend.dto.response.IdResponse;
 import com.tipafriend.model.Review;
+import com.tipafriend.security.SecurityUser;
 import com.tipafriend.service.ReviewService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,14 +21,20 @@ public class ReviewController {
     }
 
     @PostMapping
-    public ResponseEntity<IdResponse> create(@RequestBody CreateReviewRequest request) {
+    public ResponseEntity<IdResponse> create(@Valid @RequestBody CreateReviewRequest request,
+                                             Authentication authentication) {
+        Long reviewerId = currentUserId(authentication);
         Review review = reviewService.createReview(
                 request.taskAssignmentId(),
-                request.reviewerId(),
+                reviewerId,
                 request.rating(),
                 request.comment()
         );
         return ResponseEntity.ok(new IdResponse(review.getId()));
     }
-}
 
+    private Long currentUserId(Authentication authentication) {
+        SecurityUser principal = (SecurityUser) authentication.getPrincipal();
+        return principal.getId();
+    }
+}
