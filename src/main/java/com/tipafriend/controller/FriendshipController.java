@@ -1,5 +1,6 @@
 package com.tipafriend.controller;
 
+import com.tipafriend.dto.response.UserResponse;
 import com.tipafriend.security.SecurityUser;
 import com.tipafriend.service.FriendshipService;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,23 @@ public class FriendshipController {
         Long userId = currentUserId(authentication);
         friendshipService.removeFriend(userId, friendId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<UserResponse>> listFriendUsers(Authentication authentication) {
+        Long userId = currentUserId(authentication);
+        List<UserResponse> friends = friendshipService.getFriendUsers(userId)
+                .stream()
+                .map(user -> new UserResponse(
+                        user.getId(),
+                        user.getEmail(),
+                        user.getUsername(),
+                        user.getDisplayName(),
+                        user.getPhotoUrl(),
+                        user.getBio()
+                ))
+                .toList();
+        return ResponseEntity.ok(friends);
     }
 
     private Long currentUserId(Authentication authentication) {

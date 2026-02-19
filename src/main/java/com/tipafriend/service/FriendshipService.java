@@ -60,4 +60,11 @@ public class FriendshipService {
         friendshipRepository.save(new Friendship(user, friend));
         friendshipRepository.save(new Friendship(friend, user));
     }
+
+    public List<User> getFriendUsers(Long userId) {
+        return friendshipRepository.findByUserId(userId)
+                .stream()
+                .map(friendship -> friendship.getFriend())
+                .toList();
+    }
 }
