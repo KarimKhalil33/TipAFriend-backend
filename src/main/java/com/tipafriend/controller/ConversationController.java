@@ -29,10 +29,8 @@ public class ConversationController {
     public ResponseEntity<IdResponse> create(@Valid @RequestBody CreateConversationRequest request,
                                              Authentication authentication) {
         Long currentUserId = currentUserId(authentication);
-        if (!request.participantIds().contains(currentUserId)) {
-            throw new com.tipafriend.exception.BadRequestException("Creator must be a participant");
-        }
         Conversation conversation = conversationService.createConversation(
+                currentUserId,
                 request.type(),
                 request.taskAssignmentId(),
                 request.participantIds()

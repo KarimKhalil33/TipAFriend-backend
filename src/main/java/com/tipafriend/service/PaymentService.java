@@ -6,6 +6,7 @@ import com.tipafriend.model.Payment;
 import com.tipafriend.model.Post;
 import com.tipafriend.model.User;
 import com.tipafriend.model.enums.PaymentStatus;
+import com.tipafriend.model.enums.NotificationType;
 import com.tipafriend.repository.PaymentRepository;
 import com.tipafriend.repository.PostRepository;
 import com.tipafriend.repository.UserRepository;
@@ -31,17 +32,20 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
     private final String stripeSecretKey;
     private final String stripeWebhookSecret;
 
     public PaymentService(PaymentRepository paymentRepository,
                           PostRepository postRepository,
                           UserRepository userRepository,
+                          NotificationService notificationService,
                           @Value("${stripe.secret-key:}") String stripeSecretKey,
                           @Value("${stripe.webhook-secret:}") String stripeWebhookSecret) {
         this.paymentRepository = paymentRepository;
         this.postRepository = postRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
         this.stripeSecretKey = stripeSecretKey;
         this.stripeWebhookSecret = stripeWebhookSecret;
     }
@@ -70,6 +74,7 @@ public class PaymentService {
 
                 PaymentIntent intent = PaymentIntent.create(params);
                 payment.setStripePaymentIntentId(intent.getId());
+                payment.setStripeClientSecret(intent.getClientSecret());
                 payment.setStatus(PaymentStatus.PROCESSING);
             } catch (StripeException e) {
                 payment.setStatus(PaymentStatus.FAILED);
@@ -122,6 +127,22 @@ public class PaymentService {
                 payment.setStatus(PaymentStatus.SUCCEEDED);
                 payment.setPaidAt(LocalDateTime.now());
                 payment.setErrorMessage(null);
+
+                // Notify payee
+                notificationService.create(
+                    payment.getPayee().getId(),
+                    NotificationType.PAYMENT_SUCCEEDED,
+                    "Payment Received",
+                    "You received $" + payment.getAmount() + " for: " + payment.getPost().getTitle()
+                );
+
+                // Notify payer
+                notificationService.create(
+                    payment.getPayer().getId(),
+                    NotificationType.PAYMENT_SUCCEEDED,
+                    "Payment Sent",
+                    "Payment of $" + payment.getAmount() + " was successful for: " + payment.getPost().getTitle()
+                );
             } else if ("payment_intent.payment_failed".equals(type)) {
                 payment.setStatus(PaymentStatus.FAILED);
                 payment.setErrorMessage("Payment failed");

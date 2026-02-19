@@ -108,7 +108,7 @@ public class PostController {
         Long userId = currentUserId(authentication);
         List<PostResponse> result = postService.getAcceptedPosts(userId)
                 .stream()
-                .map(this::toResponse)
+                .map(task -> toResponseWithTask(task.getPost(), task.getId(), task.getAccepter().getId()))
                 .toList();
         return ResponseEntity.ok(result);
     }
@@ -135,7 +135,32 @@ public class PostController {
                 post.getPrice(),
                 post.getStatus(),
                 post.getCreatedAt(),
-                post.getUpdatedAt()
+                post.getUpdatedAt(),
+                null,
+                null
+        );
+    }
+
+    private PostResponse toResponseWithTask(Post post, Long taskAssignmentId, Long accepterId) {
+        return new PostResponse(
+                post.getId(),
+                post.getAuthor().getId(),
+                post.getType(),
+                post.getTitle(),
+                post.getDescription(),
+                post.getCategory(),
+                post.getLocationName(),
+                post.getLatitude(),
+                post.getLongitude(),
+                post.getScheduledTime(),
+                post.getDurationMinutes(),
+                post.getPaymentType(),
+                post.getPrice(),
+                post.getStatus(),
+                post.getCreatedAt(),
+                post.getUpdatedAt(),
+                taskAssignmentId,
+                accepterId
         );
     }
 }

@@ -6,6 +6,7 @@ import com.tipafriend.exception.UnauthorizedException;
 import com.tipafriend.model.Post;
 import com.tipafriend.model.TaskAssignment;
 import com.tipafriend.model.User;
+import com.tipafriend.model.enums.NotificationType;
 import com.tipafriend.model.enums.PostStatus;
 import com.tipafriend.repository.PostRepository;
 import com.tipafriend.repository.TaskAssignmentRepository;
@@ -22,15 +23,18 @@ public class TaskAssignmentService {
     private final PostRepository postRepository;
     private final FriendshipService friendshipService;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public TaskAssignmentService(TaskAssignmentRepository taskAssignmentRepository,
                                  PostRepository postRepository,
                                  FriendshipService friendshipService,
-                                 UserRepository userRepository) {
+                                 UserRepository userRepository,
+                                 NotificationService notificationService) {
         this.taskAssignmentRepository = taskAssignmentRepository;
         this.postRepository = postRepository;
         this.friendshipService = friendshipService;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -60,7 +64,17 @@ public class TaskAssignmentService {
         post.setStatus(PostStatus.ACCEPTED);
         postRepository.save(post);
 
-        return taskAssignmentRepository.save(assignment);
+        TaskAssignment saved = taskAssignmentRepository.save(assignment);
+
+        // Create notification for post author
+        notificationService.create(
+            authorId,
+            NotificationType.POST_ACCEPTED,
+            "Post Accepted",
+            accepter.getDisplayName() + " accepted your post: " + post.getTitle()
+        );
+
+        return saved;
     }
 
     @Transactional
@@ -74,7 +88,18 @@ public class TaskAssignmentService {
 
         task.setStatus(PostStatus.IN_PROGRESS);
         task.getPost().setStatus(PostStatus.IN_PROGRESS);
-        return taskAssignmentRepository.save(task);
+
+        TaskAssignment saved = taskAssignmentRepository.save(task);
+
+        // Notify post author
+        notificationService.create(
+            task.getPost().getAuthor().getId(),
+            NotificationType.TASK_UPDATED,
+            "Task In Progress",
+            task.getAccepter().getDisplayName() + " started working on: " + task.getPost().getTitle()
+        );
+
+        return saved;
     }
 
     @Transactional
@@ -89,6 +114,17 @@ public class TaskAssignmentService {
         task.setStatus(PostStatus.COMPLETED);
         task.setCompletedAt(LocalDateTime.now());
         task.getPost().setStatus(PostStatus.COMPLETED);
-        return taskAssignmentRepository.save(task);
+
+        TaskAssignment saved = taskAssignmentRepository.save(task);
+
+        // Notify post author
+        notificationService.create(
+            task.getPost().getAuthor().getId(),
+            NotificationType.TASK_UPDATED,
+            "Task Completed",
+            task.getAccepter().getDisplayName() + " completed: " + task.getPost().getTitle()
+        );
+
+        return saved;
     }
 }

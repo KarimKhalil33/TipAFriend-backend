@@ -24,7 +24,9 @@ public record PostResponse(
         BigDecimal price,
         PostStatus status,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        Long taskAssignmentId,  // for accepted posts
+        Long accepterId          // for accepted posts
 ) {
 }
 

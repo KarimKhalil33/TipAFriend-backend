@@ -42,6 +42,9 @@ public class Payment {
     @Column(name = "stripe_payment_intent_id", length = 100)
     private String stripePaymentIntentId;
 
+    @Column(name = "stripe_client_secret", length = 200)
+    private String stripeClientSecret;
+
     @Column(name = "stripe_charge_id", length = 100)
     private String stripeChargeId;
 
@@ -140,6 +143,14 @@ public class Payment {
 
     public void setStripePaymentIntentId(String stripePaymentIntentId) {
         this.stripePaymentIntentId = stripePaymentIntentId;
+    }
+
+    public String getStripeClientSecret() {
+        return stripeClientSecret;
+    }
+
+    public void setStripeClientSecret(String stripeClientSecret) {
+        this.stripeClientSecret = stripeClientSecret;
     }
 
     public String getStripeChargeId() {

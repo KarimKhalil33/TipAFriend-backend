@@ -101,10 +101,7 @@ public class PostService {
         return postRepository.findByAuthorIdOrderByCreatedAtDesc(targetUserId);
     }
 
-    public List<Post> getAcceptedPosts(Long accepterId) {
-        return taskAssignmentRepository.findByAccepterId(accepterId)
-                .stream()
-                .map(TaskAssignment::getPost)
-                .toList();
+    public List<TaskAssignment> getAcceptedPosts(Long accepterId) {
+        return taskAssignmentRepository.findByAccepterId(accepterId);
     }
 }
