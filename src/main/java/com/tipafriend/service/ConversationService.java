@@ -84,6 +84,50 @@ public class ConversationService {
         return saved;
     }
 
+    @Transactional
+    public Conversation getOrCreateConversation(Long currentUserId, ConversationType type, Long taskAssignmentId, List<Long> participantIds) {
+        // For DIRECT conversations, try to find existing one first
+        if (type == ConversationType.DIRECT) {
+            if (participantIds.size() != 1) {
+                throw new BadRequestException("Direct conversation requires exactly one other participant");
+            }
+            Long otherUserId = participantIds.get(0);
+            if (otherUserId.equals(currentUserId)) {
+                throw new BadRequestException("Cannot create conversation with yourself");
+            }
+
+            Conversation existing = findExistingDirectConversation(currentUserId, otherUserId);
+            if (existing != null) {
+                return existing;
+            }
+        }
+
+        // For TASK_THREAD, check if one already exists for this task
+        if (type == ConversationType.TASK_THREAD) {
+            if (taskAssignmentId == null) {
+                throw new BadRequestException("Task assignment required for task thread");
+            }
+            TaskAssignment task = taskAssignmentRepository.findById(taskAssignmentId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Task not found: " + taskAssignmentId));
+
+            List<Conversation> existing = conversationRepository.findAll().stream()
+                    .filter(c -> c.getType() == ConversationType.TASK_THREAD &&
+                                c.getTaskAssignment() != null &&
+                                c.getTaskAssignment().getId().equals(taskAssignmentId))
+                    .toList();
+            if (!existing.isEmpty()) {
+                return existing.get(0);
+            }
+        }
+
+        // Create new conversation
+        return createConversation(currentUserId, type, taskAssignmentId, participantIds);
+    }
+
+    public List<Conversation> listConversations(Long userId) {
+        return conversationRepository.findByParticipantUserId(userId);
+    }
+
     private Conversation findExistingDirectConversation(Long userId1, Long userId2) {
         List<Conversation> user1Conversations = conversationRepository.findByParticipantUserId(userId1);
         List<Conversation> user2Conversations = conversationRepository.findByParticipantUserId(userId2);
@@ -141,5 +185,53 @@ public class ConversationService {
         return participantRepository.findByConversationId(conversationId)
                 .stream()
                 .anyMatch(p -> p.getUser().getId().equals(userId));
+    }
+
+    /**
+     * Find-or-create the DIRECT conversation between two users and insert a system message
+     * (sender = null, system = true) tagged with the given task for context pills on the frontend.
+     * Notifications are NOT created here — task/payment services already create them.
+     */
+    @Transactional
+    public Message postSystemMessage(Long userAId, Long userBId, TaskAssignment task, String body) {
+        return postSystemMessage(userAId, userBId, task, body, null);
+    }
+
+    /**
+     * Find-or-create the DIRECT conversation between two users and insert a message
+     * tagged with the given task for context pills on the frontend.
+     *
+     * If actorUserId is provided, the message is sent AS that user (renders as a normal
+     * chat bubble on their side). Otherwise it's a system message (sender = null, system = true).
+     */
+    @Transactional
+    public Message postSystemMessage(Long userAId, Long userBId, TaskAssignment task, String body, Long actorUserId) {
+        if (userAId == null || userBId == null || userAId.equals(userBId)) {
+            return null;
+        }
+
+        Conversation conversation = findExistingDirectConversation(userAId, userBId);
+        if (conversation == null) {
+            conversation = new Conversation(ConversationType.DIRECT, null);
+            conversation = conversationRepository.save(conversation);
+
+            User a = userRepository.findById(userAId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userAId));
+            User b = userRepository.findById(userBId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userBId));
+            participantRepository.save(new ConversationParticipant(conversation, a));
+            participantRepository.save(new ConversationParticipant(conversation, b));
+        }
+
+        User sender = null;
+        boolean system = true;
+        if (actorUserId != null) {
+            sender = userRepository.findById(actorUserId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found: " + actorUserId));
+            system = false;
+        }
+
+        Message message = new Message(conversation, sender, body, task, system);
+        return messageRepository.save(message);
     }
 }

@@ -104,4 +104,8 @@ public class PostService {
     public List<TaskAssignment> getAcceptedPosts(Long accepterId) {
         return taskAssignmentRepository.findByAccepterId(accepterId);
     }
+
+    public TaskAssignment getTaskAssignmentForPost(Long postId) {
+        return taskAssignmentRepository.findByPostIdAndStatusNot(postId, PostStatus.CANCELLED).orElse(null);
+    }
 }

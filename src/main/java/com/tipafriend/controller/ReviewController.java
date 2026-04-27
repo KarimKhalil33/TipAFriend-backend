@@ -2,6 +2,7 @@ package com.tipafriend.controller;
 
 import com.tipafriend.dto.request.CreateReviewRequest;
 import com.tipafriend.dto.response.IdResponse;
+import com.tipafriend.dto.response.ReviewResponse;
 import com.tipafriend.model.Review;
 import com.tipafriend.security.SecurityUser;
 import com.tipafriend.service.ReviewService;
@@ -31,6 +32,24 @@ public class ReviewController {
                 request.comment()
         );
         return ResponseEntity.ok(new IdResponse(review.getId()));
+    }
+
+    @GetMapping("/by-task/{taskAssignmentId}")
+    public ResponseEntity<ReviewResponse> getByTaskAssignmentId(@PathVariable Long taskAssignmentId) {
+        Review review = reviewService.getByTaskAssignmentId(taskAssignmentId);
+        return ResponseEntity.ok(toResponse(review));
+    }
+
+    private ReviewResponse toResponse(Review review) {
+        return new ReviewResponse(
+                review.getId(),
+                review.getTaskAssignment().getId(),
+                review.getReviewer().getId(),
+                review.getReviewee().getId(),
+                review.getRating(),
+                review.getComment(),
+                review.getCreatedAt()
+        );
     }
 
     private Long currentUserId(Authentication authentication) {

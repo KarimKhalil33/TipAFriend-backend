@@ -19,8 +19,15 @@ public class Message {
     private Conversation conversation;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id", nullable = false)
+    @JoinColumn(name = "sender_id")
     private User sender;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "task_assignment_id")
+    private TaskAssignment taskAssignment;
+
+    @Column(name = "is_system", nullable = false)
+    private boolean system = false;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String body;
@@ -39,6 +46,14 @@ public class Message {
         this.conversation = conversation;
         this.sender = sender;
         this.body = body;
+    }
+
+    public Message(Conversation conversation, User sender, String body, TaskAssignment taskAssignment, boolean system) {
+        this.conversation = conversation;
+        this.sender = sender;
+        this.body = body;
+        this.taskAssignment = taskAssignment;
+        this.system = system;
     }
 
     public Long getId() {
@@ -60,5 +75,20 @@ public class Message {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-}
 
+    public TaskAssignment getTaskAssignment() {
+        return taskAssignment;
+    }
+
+    public void setTaskAssignment(TaskAssignment taskAssignment) {
+        this.taskAssignment = taskAssignment;
+    }
+
+    public boolean isSystem() {
+        return system;
+    }
+
+    public void setSystem(boolean system) {
+        this.system = system;
+    }
+}

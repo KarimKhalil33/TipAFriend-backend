@@ -4,6 +4,7 @@ import com.tipafriend.dto.request.CreatePostRequest;
 import com.tipafriend.dto.request.UpdatePostRequest;
 import com.tipafriend.dto.response.PostResponse;
 import com.tipafriend.model.Post;
+import com.tipafriend.model.TaskAssignment;
 import com.tipafriend.model.enums.PostCategory;
 import com.tipafriend.model.enums.PostType;
 import com.tipafriend.security.SecurityUser;
@@ -87,7 +88,14 @@ public class PostController {
         Long userId = currentUserId(authentication);
         List<PostResponse> result = postService.getMyPosts(userId)
                 .stream()
-                .map(this::toResponse)
+                .map(post -> {
+                    // For each post, check if it has a task assignment (accepted)
+                    TaskAssignment task = postService.getTaskAssignmentForPost(post.getId());
+                    if (task != null) {
+                        return toResponseWithTask(post, task.getId(), task.getAccepter().getId());
+                    }
+                    return toResponse(post);
+                })
                 .toList();
         return ResponseEntity.ok(result);
     }

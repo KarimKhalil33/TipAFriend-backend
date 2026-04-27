@@ -24,17 +24,20 @@ public class TaskAssignmentService {
     private final FriendshipService friendshipService;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final ConversationService conversationService;
 
     public TaskAssignmentService(TaskAssignmentRepository taskAssignmentRepository,
                                  PostRepository postRepository,
                                  FriendshipService friendshipService,
                                  UserRepository userRepository,
-                                 NotificationService notificationService) {
+                                 NotificationService notificationService,
+                                 ConversationService conversationService) {
         this.taskAssignmentRepository = taskAssignmentRepository;
         this.postRepository = postRepository;
         this.friendshipService = friendshipService;
         this.userRepository = userRepository;
         this.notificationService = notificationService;
+        this.conversationService = conversationService;
     }
 
     @Transactional
@@ -74,6 +77,15 @@ public class TaskAssignmentService {
             accepter.getDisplayName() + " accepted your post: " + post.getTitle()
         );
 
+        // Insert message into the DIRECT conversation, sent AS the accepter
+        conversationService.postSystemMessage(
+            authorId,
+            accepterId,
+            saved,
+            accepter.getDisplayName() + " accepted the task: " + post.getTitle(),
+            accepterId
+        );
+
         return saved;
     }
 
@@ -97,6 +109,14 @@ public class TaskAssignmentService {
             NotificationType.TASK_UPDATED,
             "Task In Progress",
             task.getAccepter().getDisplayName() + " started working on: " + task.getPost().getTitle()
+        );
+
+        conversationService.postSystemMessage(
+            task.getPost().getAuthor().getId(),
+            task.getAccepter().getId(),
+            saved,
+            task.getAccepter().getDisplayName() + " started working on: " + task.getPost().getTitle(),
+            currentUserId
         );
 
         return saved;
@@ -123,6 +143,14 @@ public class TaskAssignmentService {
             NotificationType.TASK_UPDATED,
             "Task Completed",
             task.getAccepter().getDisplayName() + " completed: " + task.getPost().getTitle()
+        );
+
+        conversationService.postSystemMessage(
+            task.getPost().getAuthor().getId(),
+            task.getAccepter().getId(),
+            saved,
+            task.getAccepter().getDisplayName() + " completed the task: " + task.getPost().getTitle(),
+            currentUserId
         );
 
         return saved;

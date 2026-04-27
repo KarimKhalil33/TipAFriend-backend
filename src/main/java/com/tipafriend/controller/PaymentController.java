@@ -42,6 +42,12 @@ public class PaymentController {
         return ResponseEntity.ok(toResponse(payment));
     }
 
+    @GetMapping("/by-task/{taskAssignmentId}")
+    public ResponseEntity<PaymentResponse> getByTaskAssignmentId(@PathVariable Long taskAssignmentId) {
+        Payment payment = paymentService.getByTaskAssignmentId(taskAssignmentId);
+        return ResponseEntity.ok(toResponse(payment));
+    }
+
     private PaymentResponse toResponse(Payment payment) {
         return new PaymentResponse(
                 payment.getId(),
@@ -63,3 +69,5 @@ public class PaymentController {
         return principal.getId();
     }
 }
+
+

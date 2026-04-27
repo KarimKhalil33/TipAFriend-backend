@@ -40,7 +40,7 @@ public class ReviewService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + reviewerId));
 
         if (reviewRepository.findByTaskAssignmentIdAndReviewerId(taskAssignmentId, reviewerId).isPresent()) {
-            throw new BadRequestException("You already reviewed this task");
+            throw new BadRequestException("DUPLICATE_REVIEW", "You already reviewed this task");
         }
 
         User author = taskAssignment.getPost().getAuthor();
@@ -58,6 +58,13 @@ public class ReviewService {
         Review review = new Review(taskAssignment, reviewer, reviewee, rating);
         review.setComment(comment);
         return reviewRepository.save(review);
+    }
+
+    public Review getByTaskAssignmentId(Long taskAssignmentId) {
+        return reviewRepository.findByTaskAssignmentId(taskAssignmentId)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found for task: " + taskAssignmentId));
     }
 }
 

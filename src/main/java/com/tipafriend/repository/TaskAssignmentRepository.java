@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TaskAssignmentRepository extends JpaRepository<TaskAssignment, Long> {
-    Optional<TaskAssignment> findByPostId(Long postId);
+    Optional<TaskAssignment> findByPostIdAndStatusNot(Long postId, PostStatus status);
+    List<TaskAssignment> findAllByPostIdOrderByAcceptedAtDesc(Long postId);
     List<TaskAssignment> findByAccepterId(Long accepterId);
     List<TaskAssignment> findByAccepterIdAndStatus(Long accepterId, PostStatus status);
 }
-
